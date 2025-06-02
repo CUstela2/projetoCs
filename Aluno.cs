@@ -1,47 +1,77 @@
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace _02._06
 {
-  
-
-
-        public class Aluno
+    public class Aluno
+    {
+        public void AdicionarAluno()
         {
-            public List<Dados> Dados { get; set; } = new List<Dados>();
+            Console.WriteLine("Digite o nome do aluno a ser adicionado: ");
+            string nome = Console.ReadLine();
+            Console.WriteLine("Digite a idade do aluno: ");
+            int idade = int.Parse(Console.ReadLine());
+            Console.WriteLine("Digite o curso do aluno: ");
+            string curso = Console.ReadLine();
 
-            public void AdicionarAluno()
+            using (var conexao = new SQLiteConnection("Data Source=banco.db"))
             {
-                Console.WriteLine("Digite o nome do aluno a ser adicionado: ");
-                var aluno = new Dados { Nome = Console.ReadLine() };
-                Console.WriteLine("Digite a idade do aluno: ");
-                aluno.Idade = int.Parse(Console.ReadLine());
-                Console.WriteLine("Digite o curso do aluno: ");
-                aluno.Curso = Console.ReadLine();
-
-                Dados.Add(aluno);
-                Console.WriteLine("Aluno adicionado com sucesso!");
+                conexao.Open();
+                var comando = conexao.CreateCommand();
+                comando.CommandText = @"
+                    INSERT INTO Alunos (Nome, Idade, Curso)
+                    VALUES (@nome, @idade, @curso);
+                ";
+                comando.Parameters.AddWithValue("@nome", nome);
+                comando.Parameters.AddWithValue("@idade", idade);
+                comando.Parameters.AddWithValue("@curso", curso);
+                comando.ExecuteNonQuery();
             }
 
-            public void ListarAlunos()
-            {
-                Console.WriteLine("Lista de Alunos:");
-                foreach (var aluno in Dados)
-            {
-                Console.WriteLine($"Nome: {aluno.Nome}, Idade: {aluno.Idade}, Curso: {aluno.Curso}");
-            }
-            }
+            Console.WriteLine("Aluno adicionado com sucesso!");
+        }
 
-            public void RemoverAluno()
+        public void ListarAlunos()
+        {
+            using (var conexao = new SQLiteConnection("Data Source=banco.db"))
             {
-                Console.WriteLine("Digite o nome do aluno a ser removido: ");
-                string nome = Console.ReadLine();
-                var alunoRemover = Dados.FirstOrDefault(d => d.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase));
-                if (alunoRemover != null)
+                conexao.Open();
+                var comando = conexao.CreateCommand();
+                comando.CommandText = "SELECT * FROM Alunos";
+                using (var leitor = comando.ExecuteReader())
                 {
-                    Dados.Remove(alunoRemover);
+                    Console.WriteLine("Lista de Alunos:");
+                    while (leitor.Read())
+                    {
+                        int id = leitor.GetInt32(0);
+                        string nome = leitor.GetString(1);
+                        int idade = leitor.GetInt32(2);
+                        string curso = leitor.GetString(3);
+
+                        Console.WriteLine($" Nome: {nome}, Idade: {idade}, Curso: {curso}, ID: {id}");
+                    }
+                }
+            }
+        }
+
+        public void RemoverAluno()
+        {
+            Console.WriteLine("Digite o ID do aluno a ser removido: ");
+            int id = int.Parse(Console.ReadLine());
+
+            using (var conexao = new SQLiteConnection("Data Source=banco.db"))
+            {
+                conexao.Open();
+                var comando = conexao.CreateCommand();
+                comando.CommandText = "DELETE FROM Alunos WHERE Id = @id";
+                comando.Parameters.AddWithValue("@id", id);
+                int resultado = comando.ExecuteNonQuery();
+
+                if (resultado > 0)
+                {
                     Console.WriteLine("Aluno removido com sucesso!");
                 }
                 else
@@ -49,21 +79,37 @@ namespace _02._06
                     Console.WriteLine("Aluno não encontrado.");
                 }
             }
+        }
 
-            public void AtualizarAluno()
+        public void AtualizarAluno()
+        {
+            Console.WriteLine("Digite o ID do aluno que deseja editar: ");
+            int id = int.Parse(Console.ReadLine());
+
+            Console.WriteLine("Digite o novo nome do aluno: ");
+            string nome = Console.ReadLine();
+            Console.WriteLine("Digite a nova idade do aluno: ");
+            int idade = int.Parse(Console.ReadLine());
+            Console.WriteLine("Digite o novo curso do aluno: ");
+            string curso = Console.ReadLine();
+
+            using (var conexao = new SQLiteConnection("Data Source=banco.db"))
             {
-                Console.WriteLine("Digite o nome do aluno que deseja editar: ");
-                string nome = Console.ReadLine();
-                var aluno = Dados.FirstOrDefault(d => d.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase));
-                if (aluno != null)
-                {
-                    Console.WriteLine("Digite o novo nome do aluno: ");
-                    aluno.Nome = Console.ReadLine();
-                    Console.WriteLine("Digite a nova idade do aluno: ");
-                    aluno.Idade = int.Parse(Console.ReadLine());
-                    Console.WriteLine("Digite o novo curso do aluno: ");
-                    aluno.Curso = Console.ReadLine();
+                conexao.Open();
+                var comando = conexao.CreateCommand();
+                comando.CommandText = @"
+                    UPDATE Alunos
+                    SET Nome = @nome, Idade = @idade, Curso = @curso
+                    WHERE Id = @id
+                ";
+                comando.Parameters.AddWithValue("@nome", nome);
+                comando.Parameters.AddWithValue("@idade", idade);
+                comando.Parameters.AddWithValue("@curso", curso);
+                comando.Parameters.AddWithValue("@id", id);
+                int resultado = comando.ExecuteNonQuery();
 
+                if (resultado > 0)
+                {
                     Console.WriteLine("Aluno atualizado com sucesso!");
                 }
                 else
@@ -71,22 +117,36 @@ namespace _02._06
                     Console.WriteLine("Aluno não encontrado.");
                 }
             }
+        }
 
-            public void BuscarAluno()
+        public void BuscarAluno()
+        {
+            Console.WriteLine("Digite o ID do aluno que deseja buscar: ");
+            int id = int.Parse(Console.ReadLine());
+
+            using (var conexao = new SQLiteConnection("Data Source=banco.db"))
             {
-                Console.WriteLine("Digite o nome do aluno que deseja buscar: ");
-                string nome = Console.ReadLine();
-                var aluno = Dados.FirstOrDefault(d => d.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase));
-                if (aluno != null)
+                conexao.Open();
+                var comando = conexao.CreateCommand();
+                comando.CommandText = "SELECT * FROM Alunos WHERE Id = @id";
+                comando.Parameters.AddWithValue("@id", id);
+                using (var leitor = comando.ExecuteReader())
                 {
-                    Console.WriteLine("Aluno encontrado.");
-                    Console.WriteLine($"Nome do aluno: {aluno.Nome}, Idade: {aluno.Idade}, Curso: {aluno.Curso}");
-                }
-                else
-                {
-                    Console.WriteLine("Aluno não encontrado.");
+                    if (leitor.Read())
+                    {
+                        string nome = leitor.GetString(1);
+                        int idade = leitor.GetInt32(2);
+                        string curso = leitor.GetString(3);
+
+                        Console.WriteLine("Aluno encontrado:");
+                        Console.WriteLine($"Nome: {nome}, Idade: {idade}, Curso: {curso}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Aluno não encontrado.");
+                    }
                 }
             }
         }
     }
-
+}
