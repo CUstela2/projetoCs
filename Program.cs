@@ -1,3 +1,2 @@
-﻿
-using _02._06;
+﻿using _02._06;
 Menu.Apresentar();

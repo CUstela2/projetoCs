@@ -9,7 +9,7 @@ namespace _02._06
 {
     public class Inicializar
     {
-                public void AdicionarAlunosIniciais()
+        public void AdicionarAlunosIniciais()
         {
             using (var conexao = new SQLiteConnection("Data Source=banco.db"))
             {
